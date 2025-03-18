@@ -4,3 +4,4 @@ numpy
 pandas
 sympy
 scipy
+streamlit
