@@ -1,16 +1,42 @@
 #!/usr/bin/env python
 # coding: utf-8
-
 import streamlit as st
 import torch
 import re
 import sympy
+import os
+import requests
+import zipfile
 from transformers import DistilBertTokenizer, DistilBertForSequenceClassification
 
-# Load the trained model and tokenizer
-MODEL_PATH = './fine_tuned_math_meme_model'
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+# Define model URL and path
+MODEL_URL = "https://github.com/haris461/math_meme_solver/releases/download/v0.1/fine_tuned_math_meme_model.zip"
+MODEL_PATH = "./fine_tuned_math_meme_model"
 
+# Function to download and extract model
+def download_and_extract_model():
+    zip_path = "model.zip"
+    
+    if not os.path.exists(MODEL_PATH):  # Check if already extracted
+        st.info("Downloading model... (This may take a minute)")
+        response = requests.get(MODEL_URL, stream=True)
+        
+        with open(zip_path, "wb") as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                f.write(chunk)
+
+        st.info("Extracting model...")
+        with zipfile.ZipFile(zip_path, "r") as zip_ref:
+            zip_ref.extractall("./")
+
+        os.remove(zip_path)  # Clean up
+        st.success("Model downloaded and extracted successfully!")
+
+# Ensure model is downloaded
+download_and_extract_model()
+
+# Load model and tokenizer
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 tokenizer = DistilBertTokenizer.from_pretrained(MODEL_PATH)
 model = DistilBertForSequenceClassification.from_pretrained(MODEL_PATH)
 model.to(device)
